@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+
+      - name: Unit tests (generator, no look-ahead, selection, trap gates)
+        run: pytest -q
+
+      - name: Eval — selection must beat the default, stay near the hindsight best, and both trap gates must fire
+        run: >
+          python eval.py --seed 42 --seeds 50
+          --beat-default --max-regret 0.22
+          --min-holdout-beat-default 0.92 --max-holdout-median-regret 0.02
+          --traps
+
+      - name: Month-close scorecard renders
+        run: python scorecard.py --month 2024-06
